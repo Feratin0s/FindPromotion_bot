@@ -1,0 +1,7 @@
+services:
+  findpromo-app:
+    image: findpromo-app
+    container_name: FindPromo
+    #stdin_open: true # equivalente ao -it para interatividade
+    #tty: true         # permite a execução em modo interativo
+    restart: unless-stopped
