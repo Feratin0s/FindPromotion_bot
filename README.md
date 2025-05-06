@@ -19,14 +19,6 @@ If you prefer not to use Docker, you can also run the bot directly with Python:
 python main.py 
 ```
 
-or 
-
-- **On Linux/macOS**:
-```bash
-python3 main.py
-```
----
-
 ## 🔧 Prerequisites
 
 Before getting started, ensure you have the following installed:
