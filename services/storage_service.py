@@ -2,6 +2,8 @@ import json
 import os
 from dotenv import load_dotenv
 
+#Edita/Salva keywords
+
 load_dotenv()
 
 KEYWORDS_FILE = os.getenv('KEYWORDS_FILE')

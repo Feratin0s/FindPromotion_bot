@@ -142,6 +142,8 @@ class MessageProcessorService:
                 return
 
             message_text = event.message.text.lower() if event.message.text else ""
+
+            logger.info(message_text)
             
             if not (re.search(r'\d+', message_text) and 
                    re.search(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', message_text)):
@@ -169,26 +171,25 @@ class MessageProcessorService:
         return any(re.search(pattern, message_text) for pattern in patterns)
 
     async def _send_notification(self, user_id: str, keyword: str, event: events.NewMessage.Event) -> None:
-        """Envia notificação para o usuário sobre palavra-chave encontrada"""
         try:
             caption = f"📢 Palavra-chave '{keyword}' encontrada:\n\n{event.message.text}"
-
+            file_path = None
+    
             if event.message.media:
                 file_path = await self._download_media(event)
                 if file_path:
                     await self._send_media_message(user_id, file_path, caption)
-                    os.remove(file_path)
             else:
-                await self.telegram_service.bot_client.send_message(
-                    int(user_id),
-                    caption
-                )
-
+                await self.telegram_service.bot_client.send_message(int(user_id), caption)
+    
             logger.info(f"Notificação enviada para usuário {user_id}")
-
+    
         except Exception as e:
             logger.error(f"Falha ao enviar notificação para {user_id}: {e}")
-
+        finally:
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+    
     async def _download_media(self, event: events.NewMessage.Event) -> Optional[str]:
         """Faz download de mídia anexada à mensagem"""
         try:

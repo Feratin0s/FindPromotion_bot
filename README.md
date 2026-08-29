@@ -38,12 +38,12 @@ cp keywords-example.json keywords.json
 ```
 --> To find your Telegram User ID, message @userinfobot on Telegram.
 
-### 2. Configure `secrets.json`
+### 2. Configure `.env`
 
-Next, copy the example file secrets-example.json and rename it to secrets.json. Fill in your bot's credentials (bot_token, api_hash, api_id, and bot_user) obtained from registering your bot on Telegram.
+Next, copy the example file .env.example and rename it to .env. Fill in your bot's credentials (bot_token, api_hash, api_id, and bot_user, phoneNumber, bot password...) obtained from registering your bot on Telegram.
 
 ```bash
-cp secrets-example.json secrets.json
+cp .env.example .env
 ```
 
 ### 3. Create a docker image
