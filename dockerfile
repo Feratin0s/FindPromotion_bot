@@ -11,7 +11,7 @@ COPY . /app
 RUN chmod +x ./main.py
 
 # Instala as dependências necessárias
-RUN pip install telethon
+RUN pip install -r requirements.txt
 
 # Define o usuário padrão (opcional)
 USER root
