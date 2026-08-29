@@ -1,6 +1,10 @@
 import json
 import os
-from config.constants import KEYWORDS_FILE
+from dotenv import load_dotenv
+
+load_dotenv()
+
+KEYWORDS_FILE = os.getenv('KEYWORDS_FILE')
 
 class StorageService:
     def __init__(self):

@@ -1,11 +1,16 @@
 import asyncio
+import os
+from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from config.secrets import load_secrets
-from config.constants import AUTH_PASSWORD
 from services.telegram_service import TelegramService
 from services.message_processor_service import MessageProcessorService
 from services.auth_service import AuthService
 from services.storage_service import StorageService
+
+load_dotenv()
+
+AUTH_PASSWORD = os.getenv('AUTH_PASSWORD')
 
 async def main():
     secrets = load_secrets()

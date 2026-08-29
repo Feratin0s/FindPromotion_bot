@@ -23,7 +23,7 @@ class TelegramService:
         await self.user_client.start(self.secrets["phone_number"])
         
         self.destination_entity = await self.user_client.get_entity(
-            self.secrets["destino"]
+            self.secrets["destiny"]
         )
         return self  # Retorna a própria instância para encadeamento
     

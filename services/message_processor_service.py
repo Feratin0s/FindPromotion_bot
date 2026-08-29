@@ -1,6 +1,7 @@
 import re
 import os
 import logging
+from dotenv import load_dotenv
 from typing import Optional
 from telethon import events
 from models.user import User
@@ -12,7 +13,10 @@ from services.commands.cancel_command import CancelCommand
 from services.commands.add_command import AddCommand
 from services.commands.remove_command import RemoveCommand
 from services.commands.list_command import ListCommand
-from config.constants import AUTH_PASSWORD
+
+load_dotenv()
+
+AUTH_PASSWORD = os.getenv('AUTH_PASSWORD')
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
