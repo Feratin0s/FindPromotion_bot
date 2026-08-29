@@ -5,7 +5,7 @@ services:
     #stdin_open: true # equivalente ao -it para interatividade
     #tty: true         # permite a execução em modo interativo
     restart: unless-stopped
-    volume: 
+    volumes: 
       - .:/app
     env_file:
       - .env
