@@ -15,6 +15,7 @@ services:
   waha:
     restart: always
     image: devlikeapro/waha:noweb-arm
+    platform: linux/arm64
     ports:
       - "3000:3000"
     env_file:
