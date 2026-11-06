@@ -25,7 +25,7 @@ Before getting started, ensure you have the following installed:
 
 - **Docker**: To build and run the bot container.
 - **Docker Compose**: To manage the bot container easily.
-- **Telethon**: To run the bot.
+- **Python requirements**
 
 ---
 
@@ -67,7 +67,7 @@ docker run -it --rm -v $(pwd):/app findpromo-app
 To run the bot in the background permanently, use Docker Compose. Run the following command:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 If you need to recreate the bot container or update the Git repository, you may want to remove unused Docker images. You can do so with the following command:

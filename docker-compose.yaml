@@ -1,0 +1,39 @@
+services:
+  findpromo-app:
+    image: findpromo-app
+    container_name: FindPromo
+    build: .
+    #stdin_open: true # equivalente ao -it para interatividade
+    #tty: true         # permite a execução em modo interativo
+    restart: unless-stopped
+    volumes: 
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      - findpromo-network
+  waha:
+    restart: always
+    image: devlikeapro/waha
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - './waha/sessions:/app/.sessions'
+      - './waha/media:/app/.media'
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    pull_policy: always
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '10'
+    networks:
+      - findpromo-network
+
+networks:
+  findpromo-network:
+    driver: bridge
