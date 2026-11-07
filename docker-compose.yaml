@@ -1,3 +1,5 @@
+include:
+  - path: ./wppconnect-server-go/docker-compose.yml
 services:
   findpromo-app:
     image: findpromo-app
@@ -12,30 +14,6 @@ services:
       - .env
     networks:
       - findpromo-network
-  waha:
-    restart: always
-    image: devlikeapro/waha:noweb-arm
-    platform: linux/arm64
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    volumes:
-      - './waha/sessions:/app/.sessions'
-      - './waha/media:/app/.media'
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
-    pull_policy: always
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '100m'
-        max-file: '10'
-    networks:
-      - findpromo-network
-    environment:
-      - WHATSAPP_DEFAULT_ENGINE=NOWEB
 
 networks:
   findpromo-network:
