@@ -1,4 +1,4 @@
-FROM python
+FROM python:alpine
 
 # Define o diretório de trabalho no container
 WORKDIR /app

@@ -1,12 +1,26 @@
 include:
   - path: ./wppconnect-server-go/docker-compose.yml
 services:
+  findpromo-core:
+    build: ./core
+    container_name: FindPromoCore
+    restart: unless-stopped
+    platform: linux/arm/v7
+    mem_limit: 16m
+    networks:
+      - findpromo-network
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
   findpromo-app:
     image: findpromo-app
     container_name: FindPromo
     build: .
     #stdin_open: true # equivalente ao -it para interatividade
     #tty: true         # permite a execução em modo interativo
+    depends_on:
+      - findpromo-core
     restart: unless-stopped
     volumes: 
       - .:/app
