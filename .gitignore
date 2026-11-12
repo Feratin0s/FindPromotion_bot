@@ -2,6 +2,7 @@
 /__pycache__
 __pycache__
 /.env
+/.dev-build/
 /lib*
 /keywords.json
 /venv

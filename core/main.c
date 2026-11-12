@@ -8,7 +8,14 @@ static void handler(struct mg_connection *c, int ev, void *ev_data) {
     if (ev != MG_EV_HTTP_MSG) return;
     struct mg_http_message *hm = (struct mg_http_message *) ev_data;
 
-    mg_http_reply(c, 200, "", "ok\n");   // responde logo, pro wppconnect não ficar esperando
+    if (mg_match(hm->uri, mg_str("/ping"), NULL)) {
+        mg_http_reply(c, 200, "", "pong\n");
+    } else if (mg_match(hm->uri, mg_str("/webhook"), NULL)) {
+        // aqui fica o código que você já tem (printf do body, etc.)
+        mg_http_reply(c, 200, "", "ok\n");
+    } else {
+        mg_http_reply(c, 404, "", "nao encontrado\n");
+    }
 
     char *event = mg_json_get_str(hm->body, "$.event");   // retorna cópia no heap
     if (event && strcmp(event, "onmessage") == 0) {
