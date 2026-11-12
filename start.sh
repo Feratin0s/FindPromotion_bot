@@ -72,7 +72,7 @@ if ! command -v cc >/dev/null 2>&1; then
 fi
 
 mkdir -p "$BUILD_DIR"
-cc -O2 -Wall -o "$CORE_BINARY" "$PROJECT_DIR/core/main.c" "$PROJECT_DIR/core/mongoose.c"
+cc -O2 -Wall -o "$CORE_BINARY" "$PROJECT_DIR/core/main.c" "$PROJECT_DIR/core/mongoose.c" "$PROJECT_DIR"/core/services/*.c -lcurl
 
 FINDPROMO_DEV_SERVICE=core "$TERMINAL" -e "$SCRIPT" &
 sleep 0.3
