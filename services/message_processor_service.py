@@ -13,6 +13,7 @@ from services.commands.cancel_command import CancelCommand
 from services.commands.add_command import AddCommand
 from services.commands.remove_command import RemoveCommand
 from services.commands.list_command import ListCommand
+from services.ui import MenuService
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ class MessageProcessorService:
         self.auth_service = auth_service
         self.storage_service = storage_service
         self.auth_password = auth_password
+        self.menu_service = MenuService(auth_service, storage_service)
         self.command_handler = self._initialize_command_handler()
         
         # Mensagem de boas-vindas
@@ -67,8 +69,22 @@ class MessageProcessorService:
         # Handler para mensagens do bot
         self.telegram_service.bot_client.add_event_handler(
             self._handle_bot_message,
-            events.NewMessage
+            events.NewMessage(incoming=True)
         )
+        
+        await self._register_bot_commands()
+
+        # Handler para cliques nos botoes
+        
+        self.telegram_service.bot_client.add_event_handler(
+        
+            self.menu_service.handle_callback,
+        
+            events.CallbackQuery
+        
+        )
+        
+        
         
         # Handler para mensagens do grupo
         self.telegram_service.user_client.add_event_handler(
@@ -76,9 +92,33 @@ class MessageProcessorService:
             events.NewMessage
         )
 
+    async def _register_bot_commands(self) -> None:
+        """Mostra os comandos no menu '/' do Telegram"""
+        try:
+            from telethon.tl.functions.bots import SetBotCommandsRequest
+            from telethon.tl.types import BotCommand, BotCommandScopeDefault
+            await self.telegram_service.bot_client(SetBotCommandsRequest(
+                scope=BotCommandScopeDefault(), lang_code='',
+                commands=[
+                    BotCommand('menu', 'Abrir o menu'),
+                    BotCommand('listar', 'Listar palavras-chave'),
+                    BotCommand('adicionar', 'Adicionar palavras-chave'),
+                    BotCommand('remover', 'Remover palavra-chave'),
+                    BotCommand('cancelar', 'Cancelar operacao'),
+                ]))
+        except Exception as e:
+            logger.warning(f'Nao foi possivel registrar comandos: {e}')
+
     async def _handle_bot_message(self, event: events.NewMessage.Event) -> None:
         """Processa mensagens recebidas pelo bot"""
         try:
+            # Evita loop: ignora mensagens enviadas pelo próprio bot ou por outros bots
+            if getattr(event, "out", False):
+                return
+            sender = await event.get_sender() if hasattr(event, "get_sender") else None
+            if sender is not None and getattr(sender, "bot", False):
+                return
+
             user_id = event.sender_id
             msg = event.message.message.strip().lower()
 
@@ -102,6 +142,7 @@ class MessageProcessorService:
                 user = self.auth_service.authenticate_user(user_id, self.auth_password, AUTH_PASSWORD)
                 self.storage_service.add_user(user_id)
                 await event.reply(self.welcome_message)
+                await self.menu_service.show_menu(event)
                 return True
             else:
                 await event.reply("🔒 Senha incorreta. Tente novamente.")
@@ -117,6 +158,15 @@ class MessageProcessorService:
                 'event': event,
                 'msg': msg
             }
+
+            if msg in ('/start', '/menu'):
+                user.state = None
+                await self.menu_service.show_menu(event)
+                return
+
+            if user.state == "adicionando" and not msg.startswith('/'):
+                await self.menu_service.handle_add_text(user, event, msg)
+                return
 
             if msg.startswith('/'):
                 command = msg[1:].split()[0]
