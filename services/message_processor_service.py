@@ -13,6 +13,7 @@ from services.commands.cancel_command import CancelCommand
 from services.commands.add_command import AddCommand
 from services.commands.remove_command import RemoveCommand
 from services.commands.list_command import ListCommand
+from services.dedup_service import DedupService, fingerprint_keys
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ class MessageProcessorService:
         self.auth_service = auth_service
         self.storage_service = storage_service
         self.auth_password = auth_password
+        self.dedup = DedupService()
         self.command_handler = self._initialize_command_handler()
         
         # Mensagem de boas-vindas
@@ -155,11 +157,26 @@ class MessageProcessorService:
             logger.error(f"Erro ao processar mensagem do grupo: {e}")
 
     async def _notify_users_about_keywords(self, event: events.NewMessage.Event, message_text: str) -> None:
-        """Notifica usuários quando suas palavras-chave são encontradas"""
+        """Notifica cada usuário uma única vez por anúncio, listando todas as palavras que bateram"""
+        matches = {}
         for user_id, keywords in self.storage_service.users_data.items():
-            for keyword in keywords:
-                if self._is_keyword_in_message(keyword, message_text):
-                    await self._send_notification(user_id, keyword, event)
+            found = [k for k in keywords if self._is_keyword_in_message(k, message_text)]
+            if found:
+                matches[user_id] = found
+        if not matches:
+            return
+
+        keys = fingerprint_keys(
+            event.message.text,
+            chat_id=getattr(event, "chat_id", None),
+            msg_id=getattr(event.message, "id", None),
+        )
+        for user_id, found in matches.items():
+            if self.dedup.check_and_mark(user_id, keys):
+                logger.info(f"Anuncio repetido ignorado para usuario {user_id}")
+                continue
+            if not await self._send_notification(user_id, found, event):
+                self.dedup.forget(user_id, keys)  # permite nova tentativa
 
     def _is_keyword_in_message(self, keyword: str, message_text: str) -> bool:
         """Verifica se a palavra-chave está presente na mensagem"""
@@ -170,22 +187,26 @@ class MessageProcessorService:
         ]
         return any(re.search(pattern, message_text) for pattern in patterns)
 
-    async def _send_notification(self, user_id: str, keyword: str, event: events.NewMessage.Event) -> None:
+    async def _send_notification(self, user_id: str, keywords, event: events.NewMessage.Event) -> bool:
+        if isinstance(keywords, str):
+            keywords = [keywords]
+        label = "Palavra-chave" if len(keywords) == 1 else "Palavras-chave"
+        names = ", ".join(f"'{k}'" for k in keywords)
+        caption = f"📢 {label} {names} encontrada:\n\n{event.message.text}"
+        file_path = None
         try:
-            caption = f"📢 Palavra-chave '{keyword}' encontrada:\n\n{event.message.text}"
-            file_path = None
-
             if event.message.media:
                 file_path = await self._download_media(event)
-                if file_path:
-                    await self._send_media_message(user_id, file_path, caption)
+            if file_path:
+                await self._send_media_message(user_id, file_path, caption)
             else:
                 await self.telegram_service.bot_client.send_message(int(user_id), caption)
 
-            logger.info(f"Notificação enviada para usuário {user_id}")
-
+            logger.info(f"Notificacao enviada para usuario {user_id}")
+            return True
         except Exception as e:
-            logger.error(f"Falha ao enviar notificação para {user_id}: {e}")
+            logger.error(f"Falha ao enviar notificacao para {user_id}: {e}")
+            return False
         finally:
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
